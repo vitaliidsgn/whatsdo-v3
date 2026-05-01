@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WhatsDo · Booking Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #000;
+    --ink-64: rgba(0,0,0,.64);
+    --ink-48: rgba(0,0,0,.48);
+    --ink-16: rgba(0,0,0,.16);
+    --ink-08: rgba(0,0,0,.08);
+    --ink-04: rgba(0,0,0,.04);
+    --surface: #fff;
+    --green: #1bbf5b;
+    --green-tint: rgba(27,191,91,.08);
+    --green-edge: rgba(27,191,91,.18);
+    --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: var(--font);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    background: #111;
+    overflow: hidden;
+    line-height: 1.5;
+  }
+
+  /* ---- Background: warm restaurant interior, abstract & dimmed ---- */
+  .bg {
+    position: fixed; inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 1100px 700px at 25% 30%, rgba(255,180,120,.55) 0%, rgba(255,180,120,0) 55%),
+      radial-gradient(ellipse 900px 600px at 75% 75%, rgba(255,140,90,.40) 0%, rgba(255,140,90,0) 55%),
+      radial-gradient(ellipse 700px 500px at 60% 20%, rgba(255,220,160,.35) 0%, rgba(255,220,160,0) 60%),
+      linear-gradient(180deg, #1a120a 0%, #2a1e12 50%, #1a120a 100%);
+    filter: saturate(1.1) blur(4px);
+    transform: scale(1.06);   /* hide blur edge */
+  }
+  /* subtle warm bokeh dots */
+  .bg::after {
+    content: "";
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle 90px at 12% 70%, rgba(255,200,140,.18), transparent 60%),
+      radial-gradient(circle 70px at 88% 25%, rgba(255,180,120,.20), transparent 60%),
+      radial-gradient(circle 60px at 70% 85%, rgba(255,210,150,.14), transparent 60%),
+      radial-gradient(circle 110px at 35% 15%, rgba(255,200,140,.10), transparent 65%);
+  }
+  .bg-veil {
+    position: fixed; inset: 0;
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(0,0,0,.25) 0%, rgba(0,0,0,.55) 100%);
+  }
+
+  /* ---- Top label ---- */
+  .label {
+    position: fixed; left: 0; right: 0; top: 32px;
+    z-index: 5;
+    text-align: center;
+    color: rgba(255,255,255,.75);
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .label .brand-mark {
+    display: inline-block;
+    width: 18px; height: 12px;
+    background: repeating-linear-gradient(90deg, currentColor 0 1.5px, transparent 1.5px 4px);
+    vertical-align: -1px;
+    margin-right: 8px;
+  }
+
+  /* ---- Stage + card ---- */
+  .stage {
+    position: fixed; inset: 0;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+  }
+  .card {
+    position: relative;
+    width: min(480px, 100%);
+    background: rgba(255,255,255,.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,.5);
+    border-radius: 18px;
+    box-shadow:
+      0 1px 2px rgba(0,0,0,.10),
+      0 30px 80px -20px rgba(0,0,0,.45);
+    padding: 24px;
+    overflow: hidden;
+    transition: height .45s cubic-bezier(.2,.7,.2,1);
+  }
+  .card-body {
+    position: relative;
+  }
+
+  /* Slide layer: each step lives in a layer that fades */
+  .slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity .35s ease, transform .35s ease;
+    pointer-events: none;
+  }
+  .slide.is-active {
+    position: relative;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  /* ---- Common pieces ---- */
+  .row {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d8d8d8, #9a9a9a);
+    flex-shrink: 0;
+    display: grid; place-items: center;
+    font-size: 11px; color: #fff; font-weight: 500;
+  }
+  .send-btn {
+    width: 32px; height: 32px;
+    background: var(--ink); color: #fff;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .send-btn svg { width: 14px; height: 14px; }
+
+  /* Step 1–3: input look */
+  .input {
+    border: 1px solid var(--ink-16);
+    border-radius: 12px;
+    padding: 14px 14px 14px 14px;
+    background: #fff;
+    display: flex; align-items: center; gap: 12px;
+    transition: border-color .2s ease;
+  }
+  .input.is-typing { border-color: var(--ink); }
+  .input-text {
+    flex: 1; min-width: 0;
+    font-size: 16px;
+    color: var(--ink);
+    line-height: 24px;
+    min-height: 24px;
+  }
+  .input-text.placeholder { color: var(--ink-48); }
+  .input-text .caret {
+    display: inline-block;
+    width: 2px; height: 18px;
+    background: var(--ink);
+    margin-left: 1px;
+    vertical-align: -3px;
+    animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Loading pad */
+  .loader {
+    text-align: center;
+    padding: 28px 8px;
+  }
+  .loader-spinner {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--ink-08);
+    border-top-color: var(--ink);
+    margin: 0 auto 16px;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text {
+    font-size: 15px;
+    color: var(--ink-64);
+    font-weight: 500;
+  }
+
+  /* Venue card / results */
+  .venue-head {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 12px;
+  }
+  .venue-name {
+    font-size: 22px; font-weight: 600;
+    letter-spacing: -.4px;
+    margin: 0;
+  }
+  .venue-meta {
+    font-size: 13px; color: var(--ink-64);
+    margin-top: 4px;
+  }
+  .venue-meta .star { color: var(--ink); font-weight: 600; }
+  .venue-meta .dot  { display: inline-block; width: 3px; height: 3px; background: currentColor; border-radius: 50%; margin: 0 6px; vertical-align: 2px; opacity: .5; }
+  .venue-thumb-row {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin: 16px 0 0;
+  }
+  .venue-thumb {
+    aspect-ratio: 4 / 3;
+    border-radius: 8px;
+    background-size: cover; background-position: center;
+  }
+  .venue-thumb:nth-child(1) { background: linear-gradient(135deg, #3a2818, #6b4a30); }
+  .venue-thumb:nth-child(2) { background: linear-gradient(135deg, #2a1e14, #4a3424); }
+  .venue-thumb:nth-child(3) { background: linear-gradient(135deg, #4a2818, #7a4a28); }
+
+  .slots-label {
+    margin-top: 18px;
+    font-size: 12px;
+    color: var(--ink-48);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .slots {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .slot {
+    padding: 12px 0;
+    border: 1px solid var(--ink-16);
+    border-radius: 10px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    background: transparent;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease;
+  }
+  .slot:hover { background: var(--ink-04); }
+  .slot.is-selected {
+    background: var(--ink); color: #fff; border-color: var(--ink);
+  }
+  .slot.is-fade { opacity: .35; transition: opacity .25s ease; }
+
+  /* Step 7 — selection (intermediate look) shown briefly */
+
+  /* Success */
+  .success-banner {
+    background: var(--green-tint);
+    border: 1px solid var(--green-edge);
+    color: #157a3a;
+    padding: 12px 14px;
+    border-radius: 12px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 14px; font-weight: 500;
+  }
+  .success-banner .check {
+    width: 20px; height: 20px;
+    background: var(--green); color: #fff;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+    font-size: 11px;
+  }
+  .confirm-card {
+    margin-top: 14px;
+    border: 1px solid var(--ink-08);
+    border-radius: 12px;
+    padding: 16px;
+    background: #fff;
+  }
+  .confirm-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    font-size: 14px;
+  }
+  .confirm-row + .confirm-row { border-top: 1px solid var(--ink-04); }
+  .confirm-row .lbl { color: var(--ink-64); font-size: 12px; letter-spacing: .02em; }
+  .confirm-row .val { font-weight: 500; }
+  .confirm-row .tag {
+    font-size: 10px; letter-spacing: .08em;
+    background: var(--ink); color: #fff;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-weight: 500;
+  }
+
+  /* ---- Scrubber + step indicator ---- */
+  .controls {
+    position: fixed; left: 0; right: 0; bottom: 28px;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none;
+  }
+  .dots {
+    display: flex; gap: 6px;
+    pointer-events: auto;
+  }
+  .dot-btn {
+    width: 22px; height: 6px;
+    background: rgba(255,255,255,.25);
+    border: 0;
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 0;
+    transition: background .2s ease, width .2s ease;
+  }
+  .dot-btn:hover { background: rgba(255,255,255,.45); }
+  .dot-btn.is-active { background: #fff; width: 32px; }
+  .step-meta {
+    color: rgba(255,255,255,.7);
+    font-size: 12px;
+    letter-spacing: .04em;
+    font-variant-numeric: tabular-nums;
+  }
+  .toolbar {
+    display: flex; gap: 6px;
+    pointer-events: auto;
+  }
+  .tool-btn {
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.2);
+    color: #fff;
+    padding: 6px 12px;
+    font: inherit;
+    font-size: 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: background .2s ease;
+  }
+  .tool-btn:hover { background: rgba(255,255,255,.2); }
+</style>
+</head>
+<body>
+
+<div class="bg" aria-hidden="true"></div>
+<div class="bg-veil" aria-hidden="true"></div>
+
+<div class="label" id="topLabel">
+  <span class="brand-mark"></span> WhatsDo · Booking flow demo
+</div>
+
+<div class="stage">
+  <div class="card" id="card">
+    <div class="card-body" id="cardBody">
+
+      <!-- 0 · IDLE -->
+      <section class="slide is-active" data-step="0">
+        <div class="input">
+          <div class="avatar">U</div>
+          <div class="input-text placeholder">What would you like to do?</div>
+          <div class="send-btn" aria-hidden="true">
+            <svg viewBox="0 0 14 14" fill="none"><path d="M3 7h8m-3-3 3 3-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- 1 · INTENT (typing short) -->
+      <section class="slide" data-step="1">
+        <div class="input is-typing">
+          <div class="avatar">U</div>
+          <div class="input-text"><span id="typed1"></span><span class="caret"></span></div>
+          <div class="send-btn" aria-hidden="true">
+            <svg viewBox="0 0 14 14" fill="none"><path d="M3 7h8m-3-3 3 3-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2 · REFINED INTENT -->
+      <section class="slide" data-step="2">
+        <div class="input is-typing">
+          <div class="avatar">U</div>
+          <div class="input-text"><span id="typed2"></span><span class="caret"></span></div>
+          <div class="send-btn" aria-hidden="true">
+            <svg viewBox="0 0 14 14" fill="none"><path d="M3 7h8m-3-3 3 3-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3 · LOADING — search -->
+      <section class="slide" data-step="3">
+        <div class="loader">
+          <div class="loader-spinner"></div>
+          <div class="loader-text">Looking for availability…</div>
+        </div>
+      </section>
+
+      <!-- 4 · LOADING — processing -->
+      <section class="slide" data-step="4">
+        <div class="loader">
+          <div class="loader-spinner"></div>
+          <div class="loader-text">Finding available times…</div>
+        </div>
+      </section>
+
+      <!-- 5 · RESULTS -->
+      <section class="slide" data-step="5">
+        <div class="venue-head">
+          <div>
+            <h2 class="venue-name">Fable</h2>
+            <div class="venue-meta">
+              <span class="star">★ 4.8</span>
+              <span class="dot"></span> Modern European
+              <span class="dot"></span> $$$
+            </div>
+          </div>
+        </div>
+        <div class="venue-thumb-row" aria-hidden="true">
+          <div class="venue-thumb"></div>
+          <div class="venue-thumb"></div>
+          <div class="venue-thumb"></div>
+        </div>
+        <div class="slots-label">AVAILABLE TONIGHT</div>
+        <div class="slots" id="slotsResults">
+          <button class="slot">5:30 PM</button>
+          <button class="slot">6:30 PM</button>
+          <button class="slot">7:00 PM</button>
+          <button class="slot">9:30 PM</button>
+        </div>
+      </section>
+
+      <!-- 6 · TIME SELECTED -->
+      <section class="slide" data-step="6">
+        <div class="venue-head">
+          <div>
+            <h2 class="venue-name">Fable</h2>
+            <div class="venue-meta">
+              <span class="star">★ 4.8</span>
+              <span class="dot"></span> Modern European
+              <span class="dot"></span> $$$
+            </div>
+          </div>
+        </div>
+        <div class="venue-thumb-row" aria-hidden="true">
+          <div class="venue-thumb"></div>
+          <div class="venue-thumb"></div>
+          <div class="venue-thumb"></div>
+        </div>
+        <div class="slots-label">AVAILABLE TONIGHT</div>
+        <div class="slots">
+          <button class="slot is-fade">5:30 PM</button>
+          <button class="slot is-selected">6:30 PM</button>
+          <button class="slot is-fade">7:00 PM</button>
+          <button class="slot is-fade">9:30 PM</button>
+        </div>
+      </section>
+
+      <!-- 7 · CONFIRMING -->
+      <section class="slide" data-step="7">
+        <div class="loader">
+          <div class="loader-spinner"></div>
+          <div class="loader-text">Confirming your booking…</div>
+        </div>
+      </section>
+
+      <!-- 8 · PAYMENT -->
+      <section class="slide" data-step="8">
+        <div class="loader">
+          <div class="loader-spinner"></div>
+          <div class="loader-text">Completing payment…</div>
+        </div>
+      </section>
+
+      <!-- 9 · SUCCESS -->
+      <section class="slide" data-step="9">
+        <div class="success-banner">
+          <span class="check">✓</span>
+          <span>Your table is booked for 6:30 PM</span>
+        </div>
+        <div class="confirm-card">
+          <div class="confirm-row">
+            <span class="val">Fable</span>
+            <span class="tag">CONFIRMED</span>
+          </div>
+          <div class="confirm-row"><span class="lbl">Time</span><span class="val">Today · 6:30 PM</span></div>
+          <div class="confirm-row"><span class="lbl">Party</span><span class="val">2 guests</span></div>
+          <div class="confirm-row"><span class="lbl">Hold</span><span class="val">$0 · Visa •• 4242</span></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<div class="controls" aria-hidden="false">
+  <div class="step-meta" id="stepMeta">01 / 10 · Idle</div>
+  <div class="dots" id="dots"></div>
+  <div class="toolbar">
+    <button class="tool-btn" id="btnPrev">← Prev</button>
+    <button class="tool-btn" id="btnPlay">Pause</button>
+    <button class="tool-btn" id="btnNext">Next →</button>
+  </div>
+</div>
+
+<script>
+  // 10 steps total, each with: label + duration before auto-advance
+  const STEPS = [
+    { label: "Idle",          dur: 1200, onEnter: () => {} },
+    { label: "Intent",        dur: 2000, onEnter: () => typeInto('typed1', 'Book a table at Fable', 50) },
+    { label: "Refined intent",dur: 2400, onEnter: () => typeInto('typed2', 'Book a table at Fable for 2 tonight', 36) },
+    { label: "Searching",     dur: 1600, onEnter: () => {} },
+    { label: "Processing",    dur: 1600, onEnter: () => {} },
+    { label: "Results",       dur: 2000, onEnter: () => {} },
+    { label: "Selected 6:30", dur: 1400, onEnter: () => {} },
+    { label: "Confirming",    dur: 1700, onEnter: () => {} },
+    { label: "Payment",       dur: 1700, onEnter: () => {} },
+    { label: "Success",       dur: 4000, onEnter: () => {} },
+  ];
+
+  const card     = document.getElementById('card');
+  const cardBody = document.getElementById('cardBody');
+  const slides   = [...cardBody.querySelectorAll('.slide')];
+  const dotsEl   = document.getElementById('dots');
+  const stepMeta = document.getElementById('stepMeta');
+  const btnPrev  = document.getElementById('btnPrev');
+  const btnNext  = document.getElementById('btnNext');
+  const btnPlay  = document.getElementById('btnPlay');
+
+  // build dots
+  STEPS.forEach((_, i) => {
+    const d = document.createElement('button');
+    d.className = 'dot-btn';
+    d.setAttribute('aria-label', 'Go to step ' + (i + 1));
+    d.addEventListener('click', () => { stop(); show(i); });
+    dotsEl.appendChild(d);
+  });
+  const dotEls = [...dotsEl.children];
+
+  let current = 0;
+  let timer = null;
+  let playing = true;
+  let typingTimer = null;
+
+  function typeInto(elId, text, speed) {
+    clearInterval(typingTimer);
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.textContent = '';
+    let i = 0;
+    typingTimer = setInterval(() => {
+      i++;
+      el.textContent = text.slice(0, i);
+      if (i >= text.length) clearInterval(typingTimer);
+    }, speed);
+  }
+
+  function measureCardHeight() {
+    // height = currently active slide height + 48 (padding 24*2)
+    const active = slides[current];
+    if (!active) return;
+    const h = active.scrollHeight;
+    card.style.height = (h + 48) + 'px';
+  }
+
+  function show(i) {
+    if (i < 0) i = 0;
+    if (i >= STEPS.length) i = STEPS.length - 1;
+    current = i;
+    slides.forEach((s, idx) => s.classList.toggle('is-active', idx === i));
+    dotEls.forEach((d, idx) => d.classList.toggle('is-active', idx === i));
+    stepMeta.textContent = String(i + 1).padStart(2, '0') + ' / ' + STEPS.length + ' · ' + STEPS[i].label;
+
+    // run onEnter callback (typing animations etc.)
+    STEPS[i].onEnter();
+
+    // animate card height to new content
+    requestAnimationFrame(() => {
+      // small timeout so DOM measurements catch up
+      setTimeout(measureCardHeight, 30);
+    });
+
+    if (playing) scheduleNext();
+  }
+
+  function scheduleNext() {
+    clearTimeout(timer);
+    const dur = STEPS[current].dur;
+    timer = setTimeout(() => {
+      const next = (current + 1) % STEPS.length;
+      show(next);
+    }, dur);
+  }
+
+  function stop() {
+    playing = false;
+    clearTimeout(timer);
+    btnPlay.textContent = 'Play';
+  }
+  function start() {
+    playing = true;
+    btnPlay.textContent = 'Pause';
+    scheduleNext();
+  }
+
+  btnPrev.addEventListener('click', () => { stop(); show((current - 1 + STEPS.length) % STEPS.length); });
+  btnNext.addEventListener('click', () => { stop(); show((current + 1) % STEPS.length); });
+  btnPlay.addEventListener('click', () => { playing ? stop() : start(); });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') { stop(); show((current + 1) % STEPS.length); }
+    if (e.key === 'ArrowLeft')  { stop(); show((current - 1 + STEPS.length) % STEPS.length); }
+    if (e.key === ' ')          { e.preventDefault(); playing ? stop() : start(); }
+  });
+
+  // re-measure on resize
+  window.addEventListener('resize', () => measureCardHeight());
+
+  // init
+  show(0);
+</script>
+</body>
+</html>
