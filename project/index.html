@@ -1615,6 +1615,40 @@
 </style>
 </head>
 <body>
+<!-- ============= VERSION SWITCHER (auto-injected) ============= -->
+<style>
+  .vsw { border-bottom: 1px solid rgba(0,0,0,.08); background: #fafafa; font: 500 13px/1 -apple-system,BlinkMacSystemFont,"Inter",system-ui,sans-serif; position: relative; z-index: 1000; }
+  .vsw-wrap { max-width: 1280px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 40px); display: flex; align-items: center; gap: 24px; min-height: 48px; }
+  .vsw-label { color: rgba(0,0,0,.5); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; flex-shrink: 0; }
+  .vsw-tabs { display: flex; align-items: stretch; gap: 0; height: 48px; flex: 1; overflow-x: auto; }
+  .vsw-tabs a { display: inline-flex; align-items: center; justify-content: center; padding: 0 18px; color: rgba(0,0,0,.6); text-decoration: none; border-bottom: 2px solid transparent; transition: color .15s ease, border-color .15s ease, background .15s ease; font-weight: 500; white-space: nowrap; }
+  .vsw-tabs a:hover { color: #0a0a0a; background: rgba(0,0,0,.03); }
+  .vsw-tabs a.is-current { color: #0a0a0a; border-bottom-color: #0a0a0a; font-weight: 600; }
+  @media (max-width: 600px) { .vsw-wrap { gap: 12px; padding: 0 16px; } .vsw-label { display: none; } .vsw-tabs a { padding: 0 12px; font-size: 12.5px; } }
+</style>
+<nav class="vsw" id="vsw" aria-label="Version switcher">
+  <div class="vsw-wrap">
+    <span class="vsw-label">Versions</span>
+    <div class="vsw-tabs">
+      <a href="index.html" data-v="v1">v1 — Original</a>
+      <a href="index-v2.html" data-v="v2">v2 — Audience tabs</a>
+      <a href="index-v3.html" data-v="v3">v3 — Industry rotator</a>
+      <a href="index-v4.html" data-v="v4">v4 — Chat hero</a>
+      <a href="index-v5.html" data-v="v5">v5 — B2B + dashboard</a>
+    </div>
+  </div>
+</nav>
+<script>
+  (function(){
+    var path = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+    var map = { 'index.html': 'v1', '': 'v1', 'index-v2.html': 'v2', 'index-v3.html': 'v3', 'index-v4.html': 'v4', 'index-v5.html': 'v5' };
+    var cur = map[path] || '';
+    document.querySelectorAll('#vsw a').forEach(function(a){ if (a.dataset.v === cur) a.classList.add('is-current'); });
+  })();
+</script>
+<!-- =========== /VERSION SWITCHER ============= -->
+
+
 
 <!-- NAV -->
 <header class="nav">
@@ -2737,6 +2771,8 @@
 </section>
 
 <!-- FOOTER -->
+
+
 <footer class="foot">
   <div class="wrap foot-grid">
     <div class="foot-brand">
@@ -3127,5 +3163,7 @@
     q.addEventListener('click', () => q.parentElement.classList.toggle('open'));
   });
 </script>
+
+
 </body>
 </html>

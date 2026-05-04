@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WhatsDo — Try the chat (Coming soon)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root { --bg:#F6EFE5; --ink:#0a0a0a; --ink-64:rgba(10,10,10,.64); --ink-16:rgba(10,10,10,.16); --surface:#fff; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .page { min-height: 100vh; display: flex; flex-direction: column; }
+  .nav { padding: 24px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--ink-16); }
+  .brand { font-weight: 600; letter-spacing: -.01em; text-decoration: none; color: var(--ink); }
+  .nav-back { font-size: 14px; color: var(--ink-64); text-decoration: none; }
+  .nav-back:hover { color: var(--ink); }
+  main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 80px 24px; }
+  .card {
+    max-width: 520px; text-align: center;
+  }
+  .pill { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--surface); border: 1px solid var(--ink-16); font-size: 12px; font-weight: 500; letter-spacing: .04em; color: var(--ink-64); margin-bottom: 32px; }
+  .dot { width: 8px; height: 8px; background: #1bbf5b; border-radius: 999px; box-shadow: 0 0 0 4px rgba(27,191,91,.18); animation: p 1.8s ease-in-out infinite; }
+  @keyframes p { 50% { box-shadow: 0 0 0 8px rgba(27,191,91,0); } }
+  h1 { margin: 0 0 16px; font-size: clamp(36px, 5vw, 56px); line-height: 1.05; letter-spacing: -.02em; font-weight: 500; text-wrap: balance; }
+  p { margin: 0 0 32px; font-size: 17px; line-height: 1.5; color: var(--ink-64); }
+  .form { display: grid; grid-template-columns: 1fr auto; border: 1px solid var(--ink-16); background: var(--surface); }
+  .form input { border: 0; background: transparent; outline: 0; padding: 16px 18px; font: inherit; font-size: 15px; color: var(--ink); }
+  .form button { border: 0; background: var(--ink); color: #fff; padding: 0 22px; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+  .form button.ok { background: #1bbf5b; }
+  .note { margin: 14px 0 0; font-size: 13px; color: var(--ink-64); }
+</style>
+</head>
+<body>
+<!-- ============= VERSION SWITCHER (auto-injected) ============= -->
+<style>
+  .vsw { border-bottom: 1px solid rgba(0,0,0,.08); background: #fafafa; font: 500 13px/1 -apple-system,BlinkMacSystemFont,"Inter",system-ui,sans-serif; position: relative; z-index: 1000; }
+  .vsw-wrap { max-width: 1280px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 40px); display: flex; align-items: center; gap: 24px; min-height: 48px; }
+  .vsw-label { color: rgba(0,0,0,.5); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; flex-shrink: 0; }
+  .vsw-tabs { display: flex; align-items: stretch; gap: 0; height: 48px; flex: 1; overflow-x: auto; }
+  .vsw-tabs a { display: inline-flex; align-items: center; justify-content: center; padding: 0 18px; color: rgba(0,0,0,.6); text-decoration: none; border-bottom: 2px solid transparent; transition: color .15s ease, border-color .15s ease, background .15s ease; font-weight: 500; white-space: nowrap; }
+  .vsw-tabs a:hover { color: #0a0a0a; background: rgba(0,0,0,.03); }
+  .vsw-tabs a.is-current { color: #0a0a0a; border-bottom-color: #0a0a0a; font-weight: 600; }
+  @media (max-width: 600px) { .vsw-wrap { gap: 12px; padding: 0 16px; } .vsw-label { display: none; } .vsw-tabs a { padding: 0 12px; font-size: 12.5px; } }
+</style>
+<nav class="vsw" id="vsw" aria-label="Version switcher">
+  <div class="vsw-wrap">
+    <span class="vsw-label">Versions</span>
+    <div class="vsw-tabs">
+      <a href="index.html" data-v="v1">v1 — Original</a>
+      <a href="index-v2.html" data-v="v2">v2 — Audience tabs</a>
+      <a href="index-v3.html" data-v="v3">v3 — Industry rotator</a>
+      <a href="index-v4.html" data-v="v4">v4 — Chat hero</a>
+      <a href="index-v5.html" data-v="v5">v5 — B2B + dashboard</a>
+    </div>
+  </div>
+</nav>
+<script>
+  (function(){
+    var path = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+    var map = { 'index.html': 'v1', '': 'v1', 'index-v2.html': 'v2', 'index-v3.html': 'v3', 'index-v4.html': 'v4', 'index-v5.html': 'v5' };
+    var cur = map[path] || '';
+    document.querySelectorAll('#vsw a').forEach(function(a){ if (a.dataset.v === cur) a.classList.add('is-current'); });
+  })();
+</script>
+<!-- =========== /VERSION SWITCHER ============= -->
+
+<div class="page">
+  <header class="nav">
+    <a href="index-v5.html" class="brand">WhatsDo</a>
+    <a href="index-v5.html" class="nav-back">← Back to whatsdo.com</a>
+  </header>
+  <main>
+    <div class="card">
+      <span class="pill"><span class="dot"></span><span>Coming soon · Private beta</span></span>
+      <h1>Just ask. Done.</h1>
+      <p>WhatsDo Chat lets you book, order, and pay for anything in plain language. Drop your email and we'll send you the invite.</p>
+      <form class="form" id="f" novalidate>
+        <input type="email" id="e" placeholder="you@email.com" required />
+        <button type="submit" id="b">Notify me</button>
+      </form>
+      <p class="note" id="n">We'll only email you about the launch.</p>
+    </div>
+  </main>
+</div>
+<script>
+  document.getElementById('f').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const v = (document.getElementById('e').value || '').trim();
+    const n = document.getElementById('n');
+    const b = document.getElementById('b');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { n.textContent = 'Please enter a valid email.'; return; }
+    b.classList.add('ok'); b.textContent = "✓ You're in"; n.textContent = "Thanks — we'll be in touch.";
+  });
+</script>
+</body>
+</html>
